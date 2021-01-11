@@ -8,6 +8,8 @@ interface BarnInterface is IERC20Upgradeable {
     function balance() external view returns (uint256);
     
     function deposit(uint256 _amount) external;
+
+    function depositAndLock(uint256 _amount, uint256 _timestamp) external;
     
     function withdraw(uint256 _shares) external;
 }

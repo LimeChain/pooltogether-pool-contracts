@@ -53,18 +53,10 @@ contract BarnPrizePool is PrizePool {
 
   /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
   /// to be held in escrow by the Yield Service
-  function _supply(uint256) internal override {
+  function _supply(uint256 amount) internal override {
     IERC20Upgradeable assetToken = _token();
-    uint256 total = assetToken.balanceOf(address(this));
-    assetToken.approve(address(barn), total);
-    barn.deposit(total);
-  }
-
-  /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
-  /// to be held in escrow by the Yield Service
-  function _supplySpecific(uint256 amount) internal {
-    _token().approve(address(barn), amount);
-    barn.deposit(amount);
+    assetToken.approve(address(barn), amount);
+    barn.depositAndLock(amount, maxTimelockDuration);
   }
 
   /// @dev The external token cannot be yDai or Dai
