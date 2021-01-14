@@ -6,18 +6,9 @@ import "@pooltogether/fixed-point/contracts/FixedPoint.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-interface IRewards {
-    function registerUserAction(address user) external;
-}
-
-contract BarnBridgeToken is ERC20Upgradeable {
-    uint256 private constant SUPPLY = 10000000 * 10**18;
-
-    constructor() public {
-        __ERC20_init("BarnBridge Governance Token", "BOND");
-        _mint(msg.sender, SUPPLY);
-    }
-}
+contract BarnBridgeToken is
+    ERC20Mintable("BarnBridge Governance Token", "BOND")
+{}
 
 contract BarnFacetMock is BarnInterface {
     using SafeMath for uint256;
@@ -26,7 +17,6 @@ contract BarnFacetMock is BarnInterface {
     uint256 constant BASE_MULTIPLIER = 1e18;
 
     BarnBridgeToken private bond;
-    IRewards public rewards;
     uint256 public bondStaked;
     mapping(address => uint256) private balances;
     mapping(address => uint256) private lockedBalances;
@@ -39,9 +29,8 @@ contract BarnFacetMock is BarnInterface {
     );
     event Lock(address indexed user, uint256 timestamp);
 
-    constructor(BarnBridgeToken _bond, address _rewards) public {
+    constructor(BarnBridgeToken _bond) public {
         bond = _bond;
-        rewards = IRewards(_rewards);
     }
 
     function token() external view override returns (IERC20Upgradeable) {
@@ -89,8 +78,6 @@ contract BarnFacetMock is BarnInterface {
         require(timestamp <= block.timestamp + MAX_LOCK, "Timestamp too big");
         require(balanceOf(user) > 0, "Sender has no balance");
 
-        //require(timestamp > currentStake.expiryTimestamp, "New timestamp lower than current lock timestamp");
-
         _updateUserLock(user, timestamp);
     }
 
@@ -115,9 +102,7 @@ contract BarnFacetMock is BarnInterface {
         emit Withdraw(msg.sender, amount, balanceAfterWithdrawal);
     }
 
-    function callRegisterUserAction(address user) public {
-        return rewards.registerUserAction(user);
-    }
+    function callRegisterUserAction(address user) public {}
 
     function balanceOf(address user) public view override returns (uint256) {
         return balances[user];
@@ -133,7 +118,7 @@ contract BarnFacetMock is BarnInterface {
         lockedBalances[user] = timestamp;
     }
 
-    function userLockedUntil(address user) public view returns (uint256) {
+    function userLockedUntil(address user) public view override returns (uint256) {
         return lockedBalances[user];
     }
 }

@@ -12,4 +12,6 @@ interface BarnInterface {
     function depositAndLock(uint256 _amount, uint256 _timestamp) external;
     
     function withdraw(uint256 _amount) external;
+
+    function userLockedUntil(address _user) external view returns (uint256);
 }

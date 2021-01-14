@@ -56,7 +56,7 @@ contract BarnPrizePool is PrizePool {
   function _supply(uint256 amount) internal override {
     IERC20Upgradeable assetToken = _token();
     assetToken.approve(address(barn), amount);
-    barn.depositAndLock(amount, maxTimelockDuration);
+    barn.depositAndLock(amount, (block.timestamp + maxTimelockDuration));
   }
 
   /// @dev The external token cannot be yDai or Dai
@@ -71,6 +71,7 @@ contract BarnPrizePool is PrizePool {
   /// @param amount The amount of underlying tokens to be redeemed
   /// @return The actual amount of tokens transferred
   function _redeem(uint256 amount) internal override returns (uint256) {
+    require(barn.userLockedUntil(msg.sender) < block.timestamp, "BarnPrizePool/user-locked");
     IERC20Upgradeable token = _token();
 
     require(_balance() >= amount, "BarnPrizePool/insuff-liquidity");
