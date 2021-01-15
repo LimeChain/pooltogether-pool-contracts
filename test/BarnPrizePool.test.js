@@ -4,6 +4,7 @@ const BarnPrizePoolHarness = require('../build/BarnPrizePoolHarness.json')
 const TokenListenerInterface = require('../build/TokenListenerInterface.json')
 const ControlledToken = require('../build/ControlledToken.json')
 const BarnFacetMock = require('../build/BarnFacetMock.json')
+const BarnRewardsMock = require('../build/BarnRewardsMock.json')
 const BarnBridgeToken = require('../build/BarnBridgeToken.json')
 
 const { ethers } = require('ethers')
@@ -19,7 +20,7 @@ let overrides = { gasLimit: 20000000 }
 describe('BarnPrizePool', function () {
   let wallet, wallet2
 
-  let prizePool, bondToken, barn, prizeStrategy, comptroller
+  let prizePool, bondToken, barn, rewards, prizeStrategy, comptroller
 
   let poolMaxExitFee = toWei('0.5')
   let poolMaxTimelockDuration = 10000
@@ -38,6 +39,9 @@ describe('BarnPrizePool', function () {
     debug('creating barn...')
     barn = await deployContract(wallet, BarnFacetMock, [bondToken.address], overrides)
 
+    debug('creating rewards...')
+    rewards = await deployContract(wallet, BarnRewardsMock, [bondToken.address, barn.address], overrides)
+
     prizeStrategy = await deployMockContract(wallet, TokenListenerInterface.abi, overrides)
 
     await prizeStrategy.mock.supportsInterface.returns(true)
@@ -52,12 +56,14 @@ describe('BarnPrizePool', function () {
     ticket = await deployMockContract(wallet, ControlledToken.abi, overrides)
     await ticket.mock.controller.returns(prizePool.address)
 
-    initializeTxPromise = prizePool['initialize(address,address[],uint256,uint256,address)'](
+    initializeTxPromise = prizePool['initialize(address,address[],uint256,uint256,address,address,address)'](
       comptroller.address,
       [ticket.address],
       poolMaxExitFee,
       poolMaxTimelockDuration,
-      barn.address
+      barn.address,
+      rewards.address,
+      bondToken.address
     )
 
     await initializeTxPromise
@@ -84,32 +90,6 @@ describe('BarnPrizePool', function () {
       await prizePool.supply(amount)
       expect(await bondToken.balanceOf(barn.address)).to.equal(amount)
     })
-  })
-
-  describe('_redeem()', () => {
-    let amount
-
-    beforeEach(async () => {
-      amount = toWei('300')
-      await bondToken.mint(prizePool.address, amount)
-      await prizePool.supply(amount)
-    })
-
-    it('should revert if reserve is exceeded', async () => {
-      await expect(prizePool.redeem(amount + toWei('1'))).to.be.revertedWith("BarnPrizePool/insuff-liquidity")
-    })
-
-    it('should allow a user to withdraw', async () => {
-      expect(await prizePool.callStatic.redeem(toWei('100'))).to.equal(toWei('100'))
-      await prizePool.redeem(toWei('100'))
-      expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('100'))
-      expect(await bondToken.balanceOf(barn.address)).to.equal(toWei('200'))
-    })
-
-    it('should not allow user to withdraw if bond is locked', async () => {
-      await expect(prizePool.redeem(amount)).to.be.revertedWith("BarnPrizePool/insuff-liquidity")
-    })
-
   })
 
   describe('balance()', () => {

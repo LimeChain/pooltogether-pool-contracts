@@ -14,4 +14,6 @@ interface BarnInterface {
     function withdraw(uint256 _amount) external;
 
     function userLockedUntil(address _user) external view returns (uint256);
+
+    function bondStaked() external view returns (uint256);
 }

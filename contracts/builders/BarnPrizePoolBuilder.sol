@@ -3,10 +3,12 @@
 pragma solidity >=0.6.0 <0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../registry/RegistryInterface.sol";
 import "./PrizePoolBuilder.sol";
 import "../prize-pool/barnbridge/BarnPrizePoolProxyFactory.sol";
 import "../external/barnbridge/BarnInterface.sol";
+import "../external/barnbridge/BarnRewardsInterface.sol";
 import "../external/openzeppelin/OpenZeppelinProxyFactoryInterface.sol";
 
 /* solium-disable security/no-block-members */
@@ -16,6 +18,8 @@ contract BarnPrizePoolBuilder is PrizePoolBuilder {
 
   struct BarnPrizePoolConfig {
     BarnInterface barn;
+    BarnRewardsInterface rewards;
+    IERC20Upgradeable bond;
     uint256 reserveRateMantissa;
     uint256 maxExitFeeMantissa;
     uint256 maxTimelockDuration;
@@ -49,7 +53,9 @@ contract BarnPrizePoolBuilder is PrizePoolBuilder {
       tokens,
       config.maxExitFeeMantissa,
       config.maxTimelockDuration,
-      config.barn
+      config.barn,
+      config.rewards,
+      config.bond
     );
 
     prizePool.transferOwnership(msg.sender);

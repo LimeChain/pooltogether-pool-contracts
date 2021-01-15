@@ -5,7 +5,7 @@ import "../prize-pool/barnbridge/BarnPrizePool.sol";
 /* solium-disable security/no-block-members */
 contract BarnPrizePoolHarness is BarnPrizePool {
 
-  uint256 public currentTime;
+  uint256 public currentTime = block.timestamp;
 
   function setCurrentTime(uint256 _currentTime) external {
     currentTime = _currentTime;

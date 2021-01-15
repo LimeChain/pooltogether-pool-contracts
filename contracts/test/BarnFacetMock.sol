@@ -17,7 +17,7 @@ contract BarnFacetMock is BarnInterface {
     uint256 constant BASE_MULTIPLIER = 1e18;
 
     BarnBridgeToken private bond;
-    uint256 public bondStaked;
+    uint256 public override bondStaked;
     mapping(address => uint256) private balances;
     mapping(address => uint256) private lockedBalances;
 
@@ -118,7 +118,13 @@ contract BarnFacetMock is BarnInterface {
         lockedBalances[user] = timestamp;
     }
 
-    function userLockedUntil(address user) public view override returns (uint256) {
+    function userLockedUntil(address user)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return lockedBalances[user];
     }
+
 }

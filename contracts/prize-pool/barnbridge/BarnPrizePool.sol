@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import "../../external/barnbridge/BarnInterface.sol";
+import "../../external/barnbridge/BarnRewardsInterface.sol";
 import "../PrizePool.sol";
 
 /// @title Prize Pool for Barn Bridge $BOND token
@@ -18,6 +19,12 @@ contract BarnPrizePool is PrizePool {
   /// @notice Interface for the barn
   BarnInterface public barn;
 
+  /// @notice Interface for the barn rewards
+  BarnRewardsInterface public rewards;
+
+  /// @notice $BOND token
+  IERC20Upgradeable public bond;
+
   /// @notice Initializes the Prize Pool and Yield Service with the required contract connections
   /// @param _controlledTokens Array of addresses for the Ticket and Sponsorship Tokens controlled by the Prize Pool
   /// @param _maxExitFeeMantissa The maximum exit fee size, relative to the withdrawal amount
@@ -28,7 +35,9 @@ contract BarnPrizePool is PrizePool {
     ControlledTokenInterface[] memory _controlledTokens,
     uint256 _maxExitFeeMantissa,
     uint256 _maxTimelockDuration,
-    BarnInterface _barn
+    BarnInterface _barn,
+    BarnRewardsInterface _rewards,
+    IERC20Upgradeable _bond
   )
     public
     initializer
@@ -40,6 +49,8 @@ contract BarnPrizePool is PrizePool {
       _maxTimelockDuration
     );
     barn = _barn;
+    rewards = _rewards;
+    bond = _bond;
 
     emit BarnPrizePoolInitialized(address(barn));
   }
@@ -54,9 +65,9 @@ contract BarnPrizePool is PrizePool {
   /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
   /// to be held in escrow by the Yield Service
   function _supply(uint256 amount) internal override {
-    IERC20Upgradeable assetToken = _token();
-    assetToken.approve(address(barn), amount);
-    barn.depositAndLock(amount, (block.timestamp + maxTimelockDuration));
+    IERC20Upgradeable bondToken = _token();
+    bondToken.approve(address(barn), amount);
+    barn.depositAndLock(amount, (_currentTime() + maxTimelockDuration));
   }
 
   /// @dev The external token cannot be yDai or Dai
@@ -71,7 +82,7 @@ contract BarnPrizePool is PrizePool {
   /// @param amount The amount of underlying tokens to be redeemed
   /// @return The actual amount of tokens transferred
   function _redeem(uint256 amount) internal override returns (uint256) {
-    require(barn.userLockedUntil(msg.sender) < block.timestamp, "BarnPrizePool/user-locked");
+    require(barn.userLockedUntil(msg.sender) <= _currentTime(), "BarnPrizePool/user-locked");
     IERC20Upgradeable token = _token();
 
     require(_balance() >= amount, "BarnPrizePool/insuff-liquidity");
@@ -89,6 +100,6 @@ contract BarnPrizePool is PrizePool {
   /// @dev Gets the underlying asset token used by the Yield Service
   /// @return A reference to the interface of the underling asset token
   function _token() internal override view returns (IERC20Upgradeable) {
-    return IERC20Upgradeable(barn.token());
+    return IERC20Upgradeable(bond);
   }
 }
