@@ -59,7 +59,8 @@ contract BarnPrizePool is PrizePool {
   /// @return The underlying balance of asset tokens
   function _balance() internal override returns (uint256) {
     uint256 balance = barn.balanceOf(address(this));
-    return balance;
+    uint256 userReward = rewards.userPendingReward(address(this));
+    return balance.add(userReward);
   }
 
   /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens

@@ -166,4 +166,10 @@ contract BarnRewardsMock is Ownable {
 
         return barn.balanceOf(user).mul(multiplier).div(decimals);
     }
+
+    function userPendingReward(address user) public view returns (uint256) {
+        uint256 multiplier = currentMultiplier.sub(userMultiplier[user]);
+
+        return barn.balanceOf(user).mul(multiplier).div(decimals);
+    }
 }
