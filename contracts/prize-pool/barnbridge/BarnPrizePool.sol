@@ -55,9 +55,8 @@ contract BarnPrizePool is PrizePool {
     /// @dev Gets the balance of the underlying assets held by the Yield Service
     /// @return The underlying balance of asset tokens
     function _balance() internal override returns (uint256) {
-        uint256 balance = barn.balanceOf(address(this));
-        uint256 bondReward = rewards.userPendingReward(address(this));
-        return balance.add(bondReward);
+        uint256 owed = rewards.owed(address(this));
+        return owed;
     }
 
     /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
@@ -65,7 +64,7 @@ contract BarnPrizePool is PrizePool {
     function _supply(uint256 amount) internal override {
         IERC20Upgradeable bondToken = _token();
         bondToken.approve(address(barn), amount);
-        barn.depositAndLock(amount, (maxTimelockDuration - _currentTime()));
+        barn.deposit(amount);
     }
 
     /// @dev The external token cannot be yDai or Dai
