@@ -163,13 +163,9 @@ contract BarnRewardsMock is Ownable {
     // it does not represent the entire reward that's due to the user unless added on top of `owed[user]`
     function _userPendingReward(address user) internal view returns (uint256) {
         uint256 multiplier = currentMultiplier.sub(userMultiplier[user]);
-
+        
         return barn.balanceOf(user).mul(multiplier).div(decimals);
     }
 
-    function userPendingReward(address user) public view returns (uint256) {
-        uint256 multiplier = currentMultiplier.sub(userMultiplier[user]);
 
-        return barn.balanceOf(user).mul(multiplier).div(decimals);
-    }
 }

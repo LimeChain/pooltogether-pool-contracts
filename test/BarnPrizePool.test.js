@@ -37,10 +37,13 @@ describe('BarnPrizePool', function () {
     bondToken = await deployContract(wallet, BarnBridgeToken, [], overrides)
 
     debug('creating barn...')
-    barn = await deployContract(wallet, BarnFacetMock, [bondToken.address], overrides)
+    barn = await deployContract(wallet, BarnFacetMock, [], overrides)
 
     debug('creating rewards...')
     rewards = await deployContract(wallet, BarnRewardsMock, [bondToken.address, barn.address], overrides)
+
+    debug('init Barn...')
+    await barn.initBarn(bondToken.address, rewards.address)
 
     prizeStrategy = await deployMockContract(wallet, TokenListenerInterface.abi, overrides)
 
@@ -98,17 +101,15 @@ describe('BarnPrizePool', function () {
     })
 
 
-    it('should return the balance of the pool', async () => {
-      let amount = toWei('100')
+    it('should return the balance underlying assets held by the Yield Service', async () => {
+      let amount = toWei('200')
 
       await bondToken.mint(prizePool.address, amount)
+      await bondToken.mint(rewards.address, amount)
+
       await prizePool.supply(amount)
 
-      expect(await prizePool.callStatic.balance()).to.equal(toWei('100'))
-
-      await bondToken.mint(barn.address, amount)
-
-      expect(await prizePool.callStatic.balance()).to.equal(toWei('100'))
+      expect(await prizePool.callStatic.balance()).to.equal(amount)
     })
   })
 

@@ -58,14 +58,12 @@ contract BarnFacetMock is BarnInterface {
         require(_amount > 0, "Amount must be greater than 0");
         require(allowance >= _amount, "Token allowance too small");
 
-        callRegisterUserAction(user);
-
         uint256 newBalance = balanceOf(user).add(_amount);
         _updateUserBalance(user, newBalance);
 
         bondStaked = bondStaked.add(_amount);
         bond.transferFrom(user, address(this), _amount);
-
+        callRegisterUserAction(user);
         emit Deposit(msg.sender, _amount, newBalance);
     }
 
@@ -134,5 +132,5 @@ contract BarnFacetMock is BarnInterface {
     {
         return lockedBalances[user];
     }
-    
+
 }
