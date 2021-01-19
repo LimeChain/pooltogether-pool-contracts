@@ -1,6 +1,7 @@
 pragma solidity >=0.6.0 <0.7.0;
 
 import "../external/barnbridge/BarnInterface.sol";
+import "../external/barnbridge/BarnRewardsInterface.sol";
 import "./ERC20Mintable.sol";
 import "@pooltogether/fixed-point/contracts/FixedPoint.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -16,7 +17,9 @@ contract BarnFacetMock is BarnInterface {
     uint256 public constant MAX_LOCK = 365 days;
     uint256 constant BASE_MULTIPLIER = 1e18;
 
-    BarnBridgeToken private bond;
+    BarnBridgeToken public bond;
+    BarnRewardsInterface public rewards;
+
     uint256 public override bondStaked;
     mapping(address => uint256) private balances;
     mapping(address => uint256) private lockedBalances;
@@ -29,8 +32,11 @@ contract BarnFacetMock is BarnInterface {
     );
     event Lock(address indexed user, uint256 timestamp);
 
-    constructor(BarnBridgeToken _bond) public {
-        bond = _bond;
+    constructor() public {}
+
+    function initBarn(address _bond, address _rewards) public {
+        bond = BarnBridgeToken(_bond);
+        rewards = BarnRewardsInterface(_rewards);
     }
 
     function token() external view override returns (IERC20Upgradeable) {
@@ -102,7 +108,9 @@ contract BarnFacetMock is BarnInterface {
         emit Withdraw(msg.sender, amount, balanceAfterWithdrawal);
     }
 
-    function callRegisterUserAction(address user) public {}
+    function callRegisterUserAction(address user) public {
+      rewards.registerUserAction(user);
+    }
 
     function balanceOf(address user) public view override returns (uint256) {
         return balances[user];
@@ -126,5 +134,5 @@ contract BarnFacetMock is BarnInterface {
     {
         return lockedBalances[user];
     }
-
+    
 }
