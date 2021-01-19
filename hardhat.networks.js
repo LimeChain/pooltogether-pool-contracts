@@ -1,7 +1,7 @@
 const ethers = require('ethers')
 
 const networks = {
-  buidlerevm: {
+  hardhat: {
     blockGasLimit: 200000000,
     allowUnlimitedContractSize: true,
     chainId: 31337

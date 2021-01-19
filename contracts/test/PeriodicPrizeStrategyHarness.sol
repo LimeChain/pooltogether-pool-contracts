@@ -2,7 +2,7 @@ pragma solidity >=0.6.0 <0.7.0;
 
 import "../prize-strategy/PeriodicPrizeStrategy.sol";
 import "./PeriodicPrizeStrategyDistributorInterface.sol";
-import "@nomiclabs/buidler/console.sol";
+import "hardhat/console.sol";
 
 /* solium-disable security/no-block-members */
 contract PeriodicPrizeStrategyHarness is PeriodicPrizeStrategy {

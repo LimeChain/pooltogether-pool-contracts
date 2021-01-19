@@ -1,4 +1,4 @@
-const networks = require('./buidler.networks')
+const networks = require('./hardhat.networks')
 
 const {TASK_COMPILE_GET_COMPILER_INPUT} = require("@nomiclabs/buidler/builtin-tasks/task-names");
 
@@ -6,11 +6,14 @@ const RNGBlockhashRopsten = require('@pooltogether/pooltogether-rng-contracts/de
 const RNGBlockhashRinkeby = require('@pooltogether/pooltogether-rng-contracts/deployments/rinkeby/RNGBlockhash.json')
 const RNGBlockhashKovan = require('@pooltogether/pooltogether-rng-contracts/deployments/kovan/RNGBlockhash.json')
 
-usePlugin("@nomiclabs/buidler-waffle");
-usePlugin("buidler-gas-reporter");
-usePlugin("solidity-coverage");
-usePlugin("@nomiclabs/buidler-etherscan");
-usePlugin("buidler-deploy");
+require("@nomiclabs/hardhat-waffle");
+require("hardhat-gas-reporter");
+require("solidity-coverage");
+require("@nomiclabs/hardhat-etherscan");
+require("hardhat-deploy");
+require("hardhat-deploy-ethers");
+
+const ethers = require('ethers');
 
 // This must occur after buidler-deploy!
 task(TASK_COMPILE_GET_COMPILER_INPUT).setAction(async (_, __, runSuper) => {
@@ -20,7 +23,7 @@ task(TASK_COMPILE_GET_COMPILER_INPUT).setAction(async (_, __, runSuper) => {
   return input;
 })
 
-const testnetAdmin = '0xE0F4217390221aF47855E094F6e112D43C8698fE' // Account 1
+const testnetAdmin = '0x1Bf2c9C06C0AD107f8B62E7A6e225e5300554D91' // Account 1
 const testnetUser1 = '0xeedDf4937E3A7aBe03E08963C3c20affbD770b51' // Account 3
 const testnetUser2 = '0xcE53382F96FdE0DB592574ed2571B3307dB859Ce' // Account 4
 const testnetUser3 = '0x381843c8b4a4a0Da3C0800708c84AA2d792D22b1' // Account 5
@@ -28,7 +31,7 @@ const testnetUser3 = '0x381843c8b4a4a0Da3C0800708c84AA2d792D22b1' // Account 5
 const optimizerEnabled = !process.env.OPTIMIZER_DISABLED
 
 const config = {
-  solc: {
+  solidity: {
     version: "0.6.12",
     optimizer: {
       enabled: optimizerEnabled,

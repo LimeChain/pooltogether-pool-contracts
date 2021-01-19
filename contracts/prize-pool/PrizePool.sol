@@ -24,7 +24,7 @@ import "./PrizePoolInterface.sol";
 /// @notice Accounting is managed using Controlled Tokens, whose mint and burn functions can only be called by this contract.
 /// @dev Must be inherited to provide specific yield-bearing asset control, such as Compound cTokens
 abstract contract PrizePool is PrizePoolInterface, YieldSource, OwnableUpgradeable, ReentrancyGuardUpgradeable, TokenControllerInterface {
-  using SafeMathUpgradeable for uint256;
+  using SafeMathUpgradeable for uint256; 
   using SafeCastUpgradeable for uint256;
   using SafeERC20Upgradeable for IERC20Upgradeable;
   using MappedSinglyLinkedList for MappedSinglyLinkedList.Mapping;
