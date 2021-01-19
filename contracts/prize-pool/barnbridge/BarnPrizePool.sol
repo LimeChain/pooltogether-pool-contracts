@@ -86,20 +86,19 @@ contract BarnPrizePool is PrizePool {
     /// @param amount The amount of underlying tokens to be redeemed
     /// @return The actual amount of tokens transferred
     function _redeem(uint256 amount) internal override returns (uint256) {
-        require(
-            barn.userLockedUntil(msg.sender) <= _currentTime(),
-            "BarnPrizePool/user-locked"
-        );
+        require(_balance() >= amount, "BarnPrizePool/insuff-liquidity");
         IERC20Upgradeable token = _token();
 
         uint256 preBalance = token.balanceOf(address(this));
 
         if (preBalance < amount) {
-            uint256 amountToClaim = amount.sub(preBalance);
-            rewards.claim(amountToClaim);
+            rewards.claim();
         }
 
         uint256 postBalance = token.balanceOf(address(this));
+
+        require(postBalance >= amount, "BarnPrizePool/insuff-liquidity");
+
         uint256 amountWithdrawn = postBalance.sub(preBalance);
 
         return amountWithdrawn;

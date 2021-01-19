@@ -95,14 +95,12 @@ contract BarnFacetMock is BarnInterface {
 
         require(balanceOf(msg.sender) >= amount, "Insufficient balance");
 
-        callRegisterUserAction(user);
-
         uint256 balanceAfterWithdrawal = balanceOf(msg.sender).sub(amount);
         _updateUserBalance(user, balanceAfterWithdrawal);
 
         bondStaked = bondStaked.sub(amount);
         bond.transfer(msg.sender, amount);
-
+        callRegisterUserAction(user);
         emit Withdraw(msg.sender, amount, balanceAfterWithdrawal);
     }
 
