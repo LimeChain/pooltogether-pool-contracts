@@ -87,7 +87,7 @@ describe('BarnPrizePool', function () {
   })
 
   describe('_supply()', () => {
-    it('should supply funds from the user', async () => {
+    it('should supply funds to barn', async () => {
       let amount = toWei('500')
       await bondToken.mint(prizePool.address, amount)
       await prizePool.supply(amount)
@@ -95,27 +95,28 @@ describe('BarnPrizePool', function () {
     })
   })
 
-  describe('balance()', () => {
-    it('should return zero when nothing', async () => {
+  describe('_balance()', () => {
+    it('should return zero when no supply or redeem have been performed', async () => {
       expect(await prizePool.callStatic.balance()).to.equal(toWei('0'))
     })
-    
+
 
     it('should return the balance underlying assets held by the Yield Service', async () => {
       let amount = toWei('200')
 
       await bondToken.mint(prizePool.address, amount)
       await bondToken.mint(rewards.address, amount)
-
       await prizePool.supply(amount)
 
-      expect(await prizePool.callStatic.balance()).to.equal(amount)
+      let owed = await rewards.owed(prizePool.address);
+
+      expect(await prizePool.callStatic.balance()).to.equal(amount.add(owed))
     })
   })
 
   describe('_redeem()', () => {
 
-    it('should revert if there is not enough liquidity', async () => {
+    it('should revert if there is not enough liquidity in the pool', async () => {
       let amount = toWei('300')
       await bondToken.mint(prizePool.address, amount)
       await prizePool.supply(amount)
@@ -123,7 +124,7 @@ describe('BarnPrizePool', function () {
       await expect(prizePool.redeem(toWei('301'))).to.be.revertedWith("BarnPrizePool/insuff-liquidity")
     })
 
-    it('should allow a user to withdraw', async () => {
+    it('should redeem and deposit the $bond difference back to barn', async () => {
       let amount = toWei('500')
       await bondToken.mint(prizePool.address, amount)
       await bondToken.mint(rewards.address, amount)
@@ -132,18 +133,45 @@ describe('BarnPrizePool', function () {
       expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('200'))
       expect(await bondToken.balanceOf(barn.address)).to.equal(toWei('300'))
 
-      // redeem called when there is enough $BOND, rewards.claim() will not be called
-      await prizePool.redeem(toWei('100'))
+      let owed = await rewards.owed(prizePool.address);
+      let amountToRedeem = toWei('100');
+      let currentPoolBalance = await bondToken.balanceOf(prizePool.address);
+      let currentBarnBalance = await bondToken.balanceOf(barn.address);
+      let expectedBarnBalance = currentPoolBalance.add(owed).add(currentBarnBalance).sub(amountToRedeem)
+
+      await prizePool.redeem(amountToRedeem)
+
+      // only the amount to be redeemed should remain in the pool
+      expect(await bondToken.balanceOf(prizePool.address)).to.equal(amountToRedeem)
+
+      // the remaining $bond after the claim should be deposited back to Barn
+      expect(await bondToken.balanceOf(barn.address)).to.equal(expectedBarnBalance)
+
+    })
+
+    it('should redeem and withdraw from barn if $bond is not enough', async () => {
+      let amount = toWei('600')
+      await bondToken.mint(prizePool.address, amount)
+      await bondToken.mint(rewards.address, amount)
+      await prizePool.supply(toWei('400'))
+
       expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('200'))
+      expect(await bondToken.balanceOf(barn.address)).to.equal(toWei('400'))
 
-      let owed = await rewards.owed(prizePool.address)
-      let currentPoolBalance = await bondToken.balanceOf(prizePool.address)
-      let expectedBalance = currentPoolBalance.add(owed)
+      let owed = await rewards.owed(prizePool.address);
+      let amountToRedeem = toWei('750');
+      let currentPoolBalance = await bondToken.balanceOf(prizePool.address);
+      let currentBarnBalance = await bondToken.balanceOf(barn.address);
+      let amountToWithdrawFromBarn = amountToRedeem.sub(currentPoolBalance).sub(owed)
+      let expectedBarnBalance = currentBarnBalance.sub(amountToWithdrawFromBarn);
 
-      // redeem called when there is not enough $BOND, rewards.claim() should be called
-      // and accrued amount also will be pulled
-      await prizePool.redeem(toWei('250'))
-      expect(await bondToken.balanceOf(prizePool.address)).to.equal(expectedBalance)
+      await prizePool.redeem(amountToRedeem)
+
+      // only the amount to be redeemed should remain in the pool
+      expect(await bondToken.balanceOf(prizePool.address)).to.equal(amountToRedeem)
+
+      // the insufficient $bond should be withdawn from barn
+      expect(await bondToken.balanceOf(barn.address)).to.equal(expectedBarnBalance)
 
     })
 
