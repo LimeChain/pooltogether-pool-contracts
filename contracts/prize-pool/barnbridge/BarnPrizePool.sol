@@ -64,7 +64,7 @@ contract BarnPrizePool is PrizePool {
     /// to be held in escrow by the Yield Service
     function _supply(uint256 amount) internal override {
         IERC20Upgradeable bondToken = _token();
-        bondToken.approve(address(barn), bondToken.totalSupply());
+        bondToken.approve(address(barn), amount);
         barn.deposit(amount);
     }
 
@@ -101,8 +101,9 @@ contract BarnPrizePool is PrizePool {
         uint256 currentBalance = token.balanceOf(address(this));
 
         /// If current bond balance is enough, deposit the difference back to Barn
-        if (currentBalance >= amount) {
+        if (currentBalance > amount) {
             diff = currentBalance.sub(amount);
+            token.approve(address(barn), diff);
             barn.deposit(diff);
         }
 
@@ -114,7 +115,7 @@ contract BarnPrizePool is PrizePool {
 
         uint256 postBalance = token.balanceOf(address(this));
 
-        require(postBalance >= amount, "BarnPrizePool/insuff-liquidity");
+        require(postBalance == amount, "BarnPrizePool/insuff-liquidity");
         return amount;
     }
 
