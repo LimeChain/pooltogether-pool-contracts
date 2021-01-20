@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-upgradeable/utils/SafeCastUpgradeable.sol";
 
 import "./CompoundPrizePoolBuilder.sol";
+import "./BarnPrizePoolBuilder.sol";
 import "./VaultPrizePoolBuilder.sol";
 import "./StakePrizePoolBuilder.sol";
 import "./MultipleWinnersBuilder.sol";
@@ -14,25 +15,30 @@ contract PoolWithMultipleWinnersBuilder {
   using SafeCastUpgradeable for uint256;
 
   event CompoundPrizePoolWithMultipleWinnersCreated(address indexed prizePool, address indexed prizeStrategy);
+  event BarnPrizePoolWithMultipleWinnersCreated(address indexed prizePool, address indexed prizeStrategy);
   event StakePrizePoolWithMultipleWinnersCreated(address indexed prizePool, address indexed prizeStrategy);
   event VaultPrizePoolWithMultipleWinnersCreated(address indexed prizePool, address indexed prizeStrategy);
 
   CompoundPrizePoolBuilder public compoundPrizePoolBuilder;
+  BarnPrizePoolBuilder public barnPrizePoolBuilder;
   VaultPrizePoolBuilder public vaultPrizePoolBuilder;
   StakePrizePoolBuilder public stakePrizePoolBuilder;
   MultipleWinnersBuilder public multipleWinnersBuilder;
 
   constructor (
     CompoundPrizePoolBuilder _compoundPrizePoolBuilder,
+    BarnPrizePoolBuilder _barnPrizePoolBuilder,   
     VaultPrizePoolBuilder _vaultPrizePoolBuilder,
     StakePrizePoolBuilder _stakePrizePoolBuilder,
     MultipleWinnersBuilder _multipleWinnersBuilder
   ) public {
     require(address(_compoundPrizePoolBuilder) != address(0), "GlobalBuilder/compoundPrizePoolBuilder-not-zero");
+    require(address(_barnPrizePoolBuilder) != address(0), "GlobalBuilder/barnPrizePoolBuilder-not-zero");
     require(address(_vaultPrizePoolBuilder) != address(0), "GlobalBuilder/vaultPrizePoolBuilder-not-zero");
     require(address(_stakePrizePoolBuilder) != address(0), "GlobalBuilder/stakePrizePoolBuilder-not-zero");
     require(address(_multipleWinnersBuilder) != address(0), "GlobalBuilder/multipleWinnersBuilder-not-zero");
     compoundPrizePoolBuilder = _compoundPrizePoolBuilder;
+    barnPrizePoolBuilder = _barnPrizePoolBuilder;
     vaultPrizePoolBuilder = _vaultPrizePoolBuilder;
     stakePrizePoolBuilder = _stakePrizePoolBuilder;
     multipleWinnersBuilder = _multipleWinnersBuilder;
@@ -46,6 +52,17 @@ contract PoolWithMultipleWinnersBuilder {
     CompoundPrizePool prizePool = compoundPrizePoolBuilder.createCompoundPrizePool(prizePoolConfig);
     MultipleWinners prizeStrategy = _createMultipleWinnersAndTransferPrizePool(prizePool, prizeStrategyConfig, decimals);
     emit CompoundPrizePoolWithMultipleWinnersCreated(address(prizePool), address(prizeStrategy));
+    return prizePool;
+  }
+
+  function createBarnMultipleWinners(
+    BarnPrizePoolBuilder.BarnPrizePoolConfig memory prizePoolConfig,
+    MultipleWinnersBuilder.MultipleWinnersConfig memory prizeStrategyConfig,
+    uint8 decimals
+  ) external returns (BarnPrizePool) {
+    BarnPrizePool prizePool = barnPrizePoolBuilder.createBarnPrizePool(prizePoolConfig);
+    MultipleWinners prizeStrategy = _createMultipleWinnersAndTransferPrizePool(prizePool, prizeStrategyConfig, decimals);
+    emit BarnPrizePoolWithMultipleWinnersCreated(address(prizePool), address(prizeStrategy));
     return prizePool;
   }
 

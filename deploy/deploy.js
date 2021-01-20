@@ -326,7 +326,7 @@ module.exports = async (buidler) => {
   const poolWithMultipleWinnersBuilderResult = await deploy("PoolWithMultipleWinnersBuilder", {
     args: [
       compoundPrizePoolBuilderResult.address,
-      //barnPrizePoolBuilderResult.address,
+      barnPrizePoolBuilderResult.address,
       vaultPrizePoolBuilderResult.address,
       stakePrizePoolBuilderResult.address,
       multipleWinnersBuilderResult.address
@@ -347,12 +347,12 @@ module.exports = async (buidler) => {
   debug("  - ControlledTokenBuilder:         ", controlledTokenBuilderResult.address)
   debug("  - MultipleWinnersBuilder:         ", multipleWinnersBuilderResult.address)
   debug("  - CompoundPrizePoolBuilder:       ", compoundPrizePoolBuilderResult.address)
-  debug("  - BarnPrizePoolBuilder:       ", barnPrizePoolBuilderResult.address)
+  debug("  - BarnPrizePoolBuilder:           ", barnPrizePoolBuilderResult.address)
   debug("  - VaultPrizePoolBuilder:          ", vaultPrizePoolBuilderResult.address)
   debug("  - StakePrizePoolBuilder:          ", stakePrizePoolBuilderResult.address)
   debug("  - PoolWithMultipleWinnersBuilder: ", poolWithMultipleWinnersBuilderResult.address)
   if (permitAndDepositDaiResult) {
-    debug("  - PermitAndDepositDai:            ", permitAndDepositDaiResult.address)
+  debug("  - PermitAndDepositDai:            ", permitAndDepositDaiResult.address)
   }
 
   debug("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
