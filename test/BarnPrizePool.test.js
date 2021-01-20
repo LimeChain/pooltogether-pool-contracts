@@ -182,4 +182,18 @@ describe('BarnPrizePool', function () {
       expect(await prizePool.token()).to.equal(bondToken.address)
     })
   })
+
+  describe('depositTo()', () => {
+    it('should deposit funds to the prize pool', async () => {
+      let amount = toWei('100')
+      await bondToken.mint(wallet._address, amount)
+      await bondToken.approve(prizePool.address, amount)
+      await prizePool.depositTo(wallet._address, amount, ticket.address, wallet._address)
+
+      // The prize pool should have 0 $bond balance as the tokens are directly sent to barn
+      expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('0'))
+      // The $bond balance in barn should be equal to the amount deposited in the prize pool
+      expect(await bondToken.balanceOf(barn.address)).to.equal(amount)
+    })
+  })
 })
