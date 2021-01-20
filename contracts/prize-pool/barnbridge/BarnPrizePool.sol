@@ -89,9 +89,14 @@ contract BarnPrizePool is PrizePool {
     function _redeem(uint256 amount) internal override returns (uint256) {
         require(_balance() >= amount, "BarnPrizePool/insuff-liquidity");
         IERC20Upgradeable token = _token();
-        uint256 diff = 0;
 
-        rewards.claim();
+        uint256 diff = 0;
+        uint256 amountToClaim = rewards.owed(address(this));
+
+        /// Check if there is anything to claim from the rewards
+        if (amountToClaim > 0) {
+            rewards.claim();
+        }
 
         uint256 currentBalance = token.balanceOf(address(this));
 
