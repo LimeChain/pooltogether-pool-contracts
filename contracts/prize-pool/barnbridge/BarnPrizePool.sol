@@ -55,15 +55,16 @@ contract BarnPrizePool is PrizePool {
     /// @dev Gets the balance of the underlying assets held by the Yield Service
     /// @return The underlying balance of asset tokens
     function _balance() internal override returns (uint256) {
+        uint256 balance = barn.balanceOf(address(this));
         uint256 owed = rewards.owed(address(this));
-        return owed;
+        return balance.add(owed);
     }
 
     /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
     /// to be held in escrow by the Yield Service
     function _supply(uint256 amount) internal override {
         IERC20Upgradeable bondToken = _token();
-        bondToken.approve(address(barn), amount);
+        bondToken.approve(address(barn), bondToken.totalSupply());
         barn.deposit(amount);
     }
 
@@ -88,20 +89,28 @@ contract BarnPrizePool is PrizePool {
     function _redeem(uint256 amount) internal override returns (uint256) {
         require(_balance() >= amount, "BarnPrizePool/insuff-liquidity");
         IERC20Upgradeable token = _token();
+        uint256 diff = 0;
 
-        uint256 preBalance = token.balanceOf(address(this));
+        rewards.claim();
 
-        if (preBalance < amount) {
-            rewards.claim();
+        uint256 currentBalance = token.balanceOf(address(this));
+
+        /// If current bond balance is enough, deposit the difference back to Barn
+        if (currentBalance >= amount) {
+            diff = currentBalance.sub(amount);
+            barn.deposit(diff);
+        }
+
+        /// If current bond balance is not enough, try to withdraw the difference from Barn
+        if (currentBalance < amount) {
+            diff = amount.sub(currentBalance);
+            barn.withdraw(diff);
         }
 
         uint256 postBalance = token.balanceOf(address(this));
 
         require(postBalance >= amount, "BarnPrizePool/insuff-liquidity");
-
-        uint256 amountWithdrawn = postBalance.sub(preBalance);
-
-        return amountWithdrawn;
+        return amount;
     }
 
     /// @dev Gets the underlying asset token used by the Yield Service
