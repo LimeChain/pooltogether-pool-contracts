@@ -39,16 +39,8 @@ contract BarnFacetMock is BarnInterface {
         rewards = BarnRewardsInterface(_rewards);
     }
 
-    function token() external view override returns (IERC20Upgradeable) {
-        return bond;
-    }
-
     function balance() public view returns (uint256) {
         return bond.balanceOf(address(this));
-    }
-
-    function removeLiquidity(uint256 _amount) external {
-        bond.transfer(msg.sender, _amount);
     }
 
     function deposit(uint256 _amount) public override {

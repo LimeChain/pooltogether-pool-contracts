@@ -78,8 +78,7 @@ contract BarnPrizePool is PrizePool {
         returns (bool)
     {
         return
-            _externalToken != address(barn) &&
-            _externalToken != address(barn.token());
+            _externalToken != address(bond);
     }
 
     /// @dev Allows a user to redeem yield-bearing tokens in exchange for the underlying

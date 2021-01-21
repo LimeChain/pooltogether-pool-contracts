@@ -3,8 +3,6 @@ pragma solidity >=0.6.0 <0.7.0;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 interface BarnInterface {
-    function token() external view returns (IERC20Upgradeable);
-
     function balanceOf(address _address) external view returns (uint256);
     
     function deposit(uint256 _amount) external;
