@@ -11,6 +11,8 @@ const { ethers } = require('ethers')
 const { expect } = require('chai')
 const buidler = require('@nomiclabs/buidler')
 
+const { AddressZero } = require('ethers').constants
+
 const toWei = ethers.utils.parseEther
 
 const debug = require('debug')('ptv3:yVaultPrizePool.test')
@@ -49,7 +51,6 @@ describe('BarnPrizePool', function () {
 
     await prizeStrategy.mock.supportsInterface.returns(true)
     await prizeStrategy.mock.supportsInterface.withArgs('0xffffffff').returns(false)
-
 
     comptroller = await deployMockContract(wallet, TokenListenerInterface.abi, overrides)
 
@@ -184,16 +185,61 @@ describe('BarnPrizePool', function () {
   })
 
   describe('depositTo()', () => {
-    it('should deposit funds to the prize pool', async () => {
-      let amount = toWei('100')
-      await bondToken.mint(wallet._address, amount)
-      await bondToken.approve(prizePool.address, amount)
-      await prizePool.depositTo(wallet._address, amount, ticket.address, wallet._address)
+    it('should mint timelock tokens to the user', async () => {
+      const amount = toWei('100')
 
-      // The prize pool should have 0 $bond balance as the tokens are directly sent to barn
-      expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('0'))
-      // The $bond balance in barn should be equal to the amount deposited in the prize pool
+      await ticket.mock.totalSupply.returns(amount)
+      await ticket.mock.balanceOf.withArgs(wallet2._address).returns(amount)
+
+      await bondToken.mint(wallet._address, amount)
+      await bondToken.increaseAllowance(prizePool.address, amount)
+
+      await prizeStrategy.mock.beforeTokenMint.withArgs(wallet2._address, amount, ticket.address, AddressZero).returns()
+      await ticket.mock.controllerMint.withArgs(wallet2._address, amount).returns()
+
+      // depositTo
+      await expect(prizePool.depositTo(wallet2._address, amount, ticket.address, AddressZero))
+        .to.emit(prizePool, 'Deposited')
+        .withArgs(wallet._address, wallet2._address, ticket.address, amount, AddressZero)
+
+      // the amount should be deposited into barn
       expect(await bondToken.balanceOf(barn.address)).to.equal(amount)
+
+      // the amount stored in the pool should be 0
+      expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('0'))
+
     })
+
+    it('should revert when deposit exceeds liquidity cap', async () => {
+      const amount = toWei('1')
+      const liquidityCap = toWei('1000')
+
+      await ticket.mock.totalSupply.returns(liquidityCap)
+      await prizePool.setLiquidityCap(liquidityCap)
+
+      await expect(prizePool.depositTo(wallet._address, amount, ticket.address, AddressZero))
+        .to.be.revertedWith("PrizePool/exceeds-liquidity-cap")
+    })
+  })
+
+  describe('withdrawInstantlyFrom()', () => {
+    it('should allow a user to withdraw instantly', async () => {
+      let amount = toWei('10')
+      await bondToken.mint(prizePool.address, amount)
+      await bondToken.mint(rewards.address, amount)
+      await prizePool.supply(amount)
+
+      await ticket.mock.totalSupply.returns(amount)
+      await ticket.mock.balanceOf.withArgs(wallet._address).returns(amount)
+      await ticket.mock.controllerBurnFrom.withArgs(wallet._address, wallet._address, amount).returns()
+
+      await expect(prizePool.withdrawInstantlyFrom(wallet._address, amount, ticket.address, poolMaxExitFee))
+        .to.emit(prizePool, 'InstantWithdrawal')
+        .withArgs(wallet._address, wallet._address, ticket.address, amount, toWei('10'), toWei('0'))
+
+      // the amount stored in the pool should be 0
+      expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('0'))
+    })
+
   })
 })
