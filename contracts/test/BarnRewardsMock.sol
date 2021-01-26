@@ -5,16 +5,15 @@ import "../external/barnbridge/BarnInterface.sol";
 import "./ERC20Mintable.sol";
 import "@pooltogether/fixed-point/contracts/FixedPoint.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract BarnBridgeToken is
     ERC20Mintable("BarnBridge Governance Token", "BOND")
 {}
 
-contract BarnRewardsMock is Ownable {
-    using SafeMath for uint256;
+contract BarnRewardsMock is OwnableUpgradeable {
+    using SafeMathUpgradeable for uint256;
 
     uint256 constant decimals = 10 ** 18;
 
@@ -41,7 +40,6 @@ contract BarnRewardsMock is Ownable {
     event Claim(address indexed user, uint256 amount);
 
     constructor(address _token, address _barn) public {
-        transferOwnership(msg.sender);
 
         rewardToken = BarnBridgeToken(_token);
         barn = BarnInterface(_barn);

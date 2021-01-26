@@ -5,14 +5,14 @@ import "../external/barnbridge/BarnRewardsInterface.sol";
 import "./ERC20Mintable.sol";
 import "@pooltogether/fixed-point/contracts/FixedPoint.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 contract BarnBridgeToken is
     ERC20Mintable("BarnBridge Governance Token", "BOND")
 {}
 
 contract BarnFacetMock is BarnInterface {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     uint256 public constant MAX_LOCK = 365 days;
     uint256 constant BASE_MULTIPLIER = 1e18;
