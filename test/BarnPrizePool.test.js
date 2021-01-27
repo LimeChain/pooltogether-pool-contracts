@@ -109,7 +109,7 @@ describe('BarnPrizePool', function () {
       await bondToken.mint(rewards.address, amount)
       await prizePool.supply(amount)
 
-      let owed = await rewards.owed(prizePool.address);
+      let owed = await prizePool.owedReward();
 
       expect(await prizePool.callStatic.balance()).to.equal(amount.add(owed))
     })
@@ -134,7 +134,7 @@ describe('BarnPrizePool', function () {
       expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('200'))
       expect(await bondToken.balanceOf(barn.address)).to.equal(toWei('300'))
 
-      let owed = await rewards.owed(prizePool.address);
+      let owed = await prizePool.owedReward();
       let amountToRedeem = toWei('100');
       let currentPoolBalance = await bondToken.balanceOf(prizePool.address);
       let currentBarnBalance = await bondToken.balanceOf(barn.address);
@@ -159,7 +159,7 @@ describe('BarnPrizePool', function () {
       expect(await bondToken.balanceOf(prizePool.address)).to.equal(toWei('200'))
       expect(await bondToken.balanceOf(barn.address)).to.equal(toWei('400'))
 
-      let owed = await rewards.owed(prizePool.address);
+      let owed = await prizePool.owedReward();
       let amountToRedeem = toWei('750');
       let currentPoolBalance = await bondToken.balanceOf(prizePool.address);
       let currentBarnBalance = await bondToken.balanceOf(barn.address);
