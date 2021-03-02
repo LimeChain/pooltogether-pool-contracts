@@ -20,7 +20,6 @@ contract BarnPrizePoolBuilder is PrizePoolBuilder {
     BarnInterface barn;
     BarnRewardsInterface rewards;
     IERC20Upgradeable bond;
-    uint256 reserveRateMantissa;
     uint256 maxExitFeeMantissa;
     uint256 maxTimelockDuration;
   }

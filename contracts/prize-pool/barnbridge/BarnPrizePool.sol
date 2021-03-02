@@ -56,8 +56,8 @@ contract BarnPrizePool is PrizePool {
     /// @return The underlying balance of asset tokens
     function _balance() internal override returns (uint256) {
         uint256 balance = barn.balanceOf(address(this));
-        uint256 owedReward = owedReward();
-        return balance.add(owedReward);
+        uint256 total = balance.add(owedReward());
+        return total;
     }
 
     /// @dev Allows a user to supply asset tokens in exchange for yield-bearing tokens
@@ -89,7 +89,7 @@ contract BarnPrizePool is PrizePool {
         IERC20Upgradeable token = _token();
 
         uint256 diff = 0;
-        uint256 amountToClaim = rewards.owed(address(this));
+        uint256 amountToClaim = owedReward();
 
         /// Check if there is anything to claim from the rewards
         if (amountToClaim > 0) {
