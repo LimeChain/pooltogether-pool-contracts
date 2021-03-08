@@ -155,13 +155,17 @@ contract BarnPrizePool is PrizePool {
         reserveTotalSupply = 0;
         uint256 redeemed = _redeem(amount);
 
-        _token().safeTransfer(
-            address(reserveFeeCollectorBarn),
-            redeemed.div(2)
-        );
+        uint256 ptReserveAmount = redeemed.div(2);
+        uint256 barnReserveAmount = redeemed.sub(ptReserveAmount);
+        
         _token().safeTransfer(
             address(reserveFeeCollectorPoolTogether),
-            redeemed.div(2)
+            ptReserveAmount
+        );
+
+        _token().safeTransfer(
+            address(reserveFeeCollectorBarn),
+            barnReserveAmount
         );
 
         emit SplitReserveWithdrawal(reserveFeeCollectorBarn, reserveFeeCollectorPoolTogether, amount);
