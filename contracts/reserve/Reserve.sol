@@ -5,7 +5,7 @@ pragma solidity >=0.5.0 <0.7.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./ReserveInterface.sol";
-import "../prize-pool/PrizePoolInterface.sol";
+import "../prize-pool/BarnPrizePoolInterface.sol";
 
 /// @title Interface that allows a user to draw an address using an index
 contract Reserve is OwnableUpgradeable, ReserveInterface {
@@ -29,8 +29,8 @@ contract Reserve is OwnableUpgradeable, ReserveInterface {
     emit ReserveRateMantissaSet(rateMantissa);
   }
 
-  function withdrawReserve(address prizePool, address to) external onlyOwner returns (uint256) {
-    return PrizePoolInterface(prizePool).withdrawReserve(to);
+  function withdrawSplitReserve(address prizePool) external returns (uint256) {
+    return BarnPrizePoolInterface(prizePool).withdrawSplitReserve();
   }
 
   function reserveRateMantissa(address) external view override returns (uint256) {

@@ -15,6 +15,11 @@ contract BarnPrizePool is PrizePool {
     using SafeMathUpgradeable for uint256;
 
     event BarnPrizePoolInitialized(address indexed barn);
+    event SplitReserveWithdrawal(
+        address indexed reserveFeeCollectorBarn,
+        address indexed reserveFeeCollectorPoolTogether,
+        uint256 amount
+    );
 
     /// @notice Interface for the barn
     BarnInterface public barn;
@@ -25,11 +30,19 @@ contract BarnPrizePool is PrizePool {
     /// @notice $BOND token
     IERC20Upgradeable public bond;
 
+    /// @notice Address to collect accrued reserve fees for Barn
+    address public reserveFeeCollectorBarn;
+
+    /// @notice Address to collect accrued reserve fees for PoolTogether
+    address public reserveFeeCollectorPoolTogether;
+
     /// @notice Initializes the Prize Pool and Yield Service with the required contract connections
     /// @param _controlledTokens Array of addresses for the Ticket and Sponsorship Tokens controlled by the Prize Pool
     /// @param _maxExitFeeMantissa The maximum exit fee size, relative to the withdrawal amount
     /// @param _maxTimelockDuration The maximum length of time the withdraw timelock could be
     /// @param _barn Address of the barn
+    /// @param _reserveFeeCollectorBarn The address which will collect fees for Barn side
+    /// @param _reserveFeeCollectorPoolTogether The address which will collect fees for Pool Together side
     function initialize(
         RegistryInterface _reserveRegistry,
         ControlledTokenInterface[] memory _controlledTokens,
@@ -37,9 +50,11 @@ contract BarnPrizePool is PrizePool {
         uint256 _maxTimelockDuration,
         BarnInterface _barn,
         BarnRewardsInterface _rewards,
-        IERC20Upgradeable _bond
+        IERC20Upgradeable _bond,
+        address _reserveFeeCollectorBarn,
+        address _reserveFeeCollectorPoolTogether
     ) public initializer {
-        PrizePool.initialize(
+    PrizePool.initialize(
             _reserveRegistry,
             _controlledTokens,
             _maxExitFeeMantissa,
@@ -48,6 +63,8 @@ contract BarnPrizePool is PrizePool {
         barn = _barn;
         rewards = _rewards;
         bond = _bond;
+        reserveFeeCollectorBarn = _reserveFeeCollectorBarn;
+        reserveFeeCollectorPoolTogether = _reserveFeeCollectorPoolTogether;
 
         emit BarnPrizePoolInitialized(address(barn));
     }
@@ -131,5 +148,24 @@ contract BarnPrizePool is PrizePool {
         uint256 pendingReward = barn.balanceOf(address(this)).mul(multiplier).div(10 ** 18);
 
         return owed.add(pendingReward);
+    }
+
+    function withdrawSplitReserve() external onlyReserve returns (uint256) {
+        uint256 amount = reserveTotalSupply;
+        reserveTotalSupply = 0;
+        uint256 redeemed = _redeem(amount);
+
+        _token().safeTransfer(
+            address(reserveFeeCollectorBarn),
+            redeemed.div(2)
+        );
+        _token().safeTransfer(
+            address(reserveFeeCollectorPoolTogether),
+            redeemed.div(2)
+        );
+
+        emit SplitReserveWithdrawal(reserveFeeCollectorBarn, reserveFeeCollectorPoolTogether, amount);
+        
+        return redeemed;
     }
 }

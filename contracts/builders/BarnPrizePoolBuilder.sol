@@ -20,6 +20,8 @@ contract BarnPrizePoolBuilder is PrizePoolBuilder {
     BarnInterface barn;
     BarnRewardsInterface rewards;
     IERC20Upgradeable bond;
+    address reserveFeeCollectorBarn;
+    address reserveFeeCollectorPoolTogether;
     uint256 maxExitFeeMantissa;
     uint256 maxTimelockDuration;
   }
@@ -54,7 +56,9 @@ contract BarnPrizePoolBuilder is PrizePoolBuilder {
       config.maxTimelockDuration,
       config.barn,
       config.rewards,
-      config.bond
+      config.bond,
+      config.reserveFeeCollectorBarn,
+      config.reserveFeeCollectorPoolTogether
     );
 
     prizePool.transferOwnership(msg.sender);
