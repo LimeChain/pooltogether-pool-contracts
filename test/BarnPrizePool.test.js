@@ -60,14 +60,16 @@ describe('BarnPrizePool', function () {
     ticket = await deployMockContract(wallet, ControlledToken.abi, overrides)
     await ticket.mock.controller.returns(prizePool.address)
 
-    initializeTxPromise = prizePool['initialize(address,address[],uint256,uint256,address,address,address)'](
+    initializeTxPromise = prizePool['initialize(address,address[],uint256,uint256,address,address,address,address,address)'](
       comptroller.address,
       [ticket.address],
       poolMaxExitFee,
       poolMaxTimelockDuration,
       barn.address,
       rewards.address,
-      bondToken.address
+      bondToken.address,
+      AddressZero,
+      AddressZero
     )
 
     await initializeTxPromise
